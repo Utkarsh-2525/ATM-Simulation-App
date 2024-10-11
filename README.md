@@ -11,7 +11,7 @@ This project is a simple ATM (Automated Teller Machine) simulation implemented i
 - Transaction History
 - Change PIN (Personal Identification Number)
 
-## Technologies Used: Core Java - Swing and Abstract Window Toolkit(AWS)
+## Technologies Used: Core Java - Swing and Abstract Window Toolkit(AWT)
 ## DataBase Used: MySQL
 
 ## Getting Started
