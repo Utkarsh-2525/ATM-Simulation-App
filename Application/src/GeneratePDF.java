@@ -13,14 +13,16 @@ import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 
 import java.sql.ResultSet;
+import java.text.NumberFormat;
+import java.util.Locale;
 
 public class GeneratePDF {
     GeneratePDF(String CardNumber) {
         try {
+            long currentBal = 0;
             // Database connection
             ConnToDB obj = new ConnToDB();
-//            Statement stmt = obj.createStatement();
-            ResultSet records = obj.st.executeQuery("SELECT date,type ,amount FROM bank");
+            ResultSet records = obj.st.executeQuery("SELECT date, type, amount FROM bank");
 
             String pdfPath = "E:/ATM_Simulation_System/Invoices/" + CardNumber + ".pdf";
 
@@ -44,7 +46,7 @@ public class GeneratePDF {
             // Adding some space after the heading
             document.add(new Paragraph("\n\n"));
 
-            // Creating a table with 2 columns
+            // Creating a table with 3 columns (Date, Type, Amount)
             Table table = new Table(new UnitValue[] { UnitValue.createPercentValue(40), UnitValue.createPercentValue(25), UnitValue.createPercentValue(35) });
             table.addHeaderCell(new Cell().add(new Paragraph("Date")).setBold().setBorder(Border.NO_BORDER));
             table.addHeaderCell(new Cell().add(new Paragraph("Type")).setBold().setBorder(Border.NO_BORDER));
@@ -52,21 +54,38 @@ public class GeneratePDF {
 
             // Looping through the ResultSet and adding cells to the table
             while (records.next()) {
-                table.addCell(new Cell().add(new Paragraph(records.getString("date"))));
-                table.addCell(new Cell().add(new Paragraph(records.getString("type"))));
-                table.addCell(new Cell().add(new Paragraph(records.getString("amount"))));
+                String date = records.getString("date");
+                String type = records.getString("type");
+                long amount = records.getLong("amount");
+
+                // Adding transaction details to the table
+                table.addCell(new Cell().add(new Paragraph(date)));
+                table.addCell(new Cell().add(new Paragraph(type)));
+                table.addCell(new Cell().add(new Paragraph(formatInIndianNumberSystem(amount)+ "/-")));
+
+                // Calculating current balance based on transaction type
+                if (type.equalsIgnoreCase("Deposit")) {
+                    currentBal += amount;
+                } else if (type.equalsIgnoreCase("Withdrawal")) {
+                    currentBal -= amount;
+                }
             }
 
-            // Adding the table to the document
+            // Adding the balance row at the end
+            table.addCell(new Cell(1, 2).add(new Paragraph("Current Balance")).setBold());
+            table.addCell(new Cell().add(new Paragraph(formatInIndianNumberSystem(currentBal)+ "/-")));
+
             document.add(table);
-
             document.add(image);
-
-            // Closing the document
             document.close();
-//            conn.close();
         } catch (Exception e) {
             System.out.println(e);
         }
+    }
+
+    // Utility method to format numbers in Indian number system
+    private String formatInIndianNumberSystem(long amount) {
+        NumberFormat indianFormat = NumberFormat.getInstance(new Locale("en", "IN"));
+        return indianFormat.format(amount);
     }
 }
